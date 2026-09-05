@@ -1,3 +1,4 @@
 package org.crosscheckj.comparators;
 
-public record FileEntryDifference() {}
+public record FileEntryDifference(long lineNumber, String expectedValue, String actualValue) {
+}

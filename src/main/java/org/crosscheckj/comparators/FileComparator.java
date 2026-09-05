@@ -6,5 +6,5 @@ import java.util.List;
 public interface FileComparator {
     boolean canApply(Path file);
 
-    List<FileEntryDifference> compare(Path source, Path destination);
+    List<FileEntryDifference> compare(Path expected, Path actual);
 }
