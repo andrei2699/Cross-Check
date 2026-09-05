@@ -27,16 +27,7 @@ public class FolderComparator {
     List<File> sortedExpectedFiles = getSortedEntries(expectedFolder);
     List<File> sortedActualFiles = getSortedEntries(actualFolder);
 
-    if (sortedExpectedFiles.size() != sortedActualFiles.size()) {
-      return List.of(
-          new FolderEntryDifference.DifferentChildCount(
-              expectedFolder.toPath(),
-              actualFolder.toPath(),
-              sortedExpectedFiles.size(),
-              sortedActualFiles.size()));
-    }
-
-    return compare(sortedExpectedFiles, sortedActualFiles);
+    return compare(expectedFolder, sortedExpectedFiles, actualFolder, sortedActualFiles);
   }
 
   private List<File> getSortedEntries(File folder) {
@@ -45,7 +36,17 @@ public class FolderComparator {
     return Arrays.stream(files).sorted().toList();
   }
 
-  private List<FolderEntryDifference> compare(List<File> expectedFiles, List<File> actualFiles) {
+  private List<FolderEntryDifference> compare(
+      File expectedFolder, List<File> expectedFiles, File actualFolder, List<File> actualFiles) {
+    if (expectedFiles.size() != actualFiles.size()) {
+      return List.of(
+          new FolderEntryDifference.DifferentChildCount(
+              expectedFolder.toPath(),
+              actualFolder.toPath(),
+              expectedFiles.size(),
+              actualFiles.size()));
+    }
+
     List<FolderEntryDifference> result = new ArrayList<>();
 
     int index = 0;
@@ -55,13 +56,14 @@ public class FolderComparator {
 
       getPossibleDifferenceName(expected, actual)
           .or(() -> getPossibleDifferenceType(expected, actual))
+          .or(() -> getPossibleFileDifferences(expected.toPath(), actual.toPath()))
           .ifPresent(result::add);
 
       if (expected.isDirectory() && actual.isDirectory()) {
         List<File> expectedSubFiles = getSortedEntries(expected);
         List<File> actualSubFiles = getSortedEntries(actual);
 
-        result.addAll(compare(expectedSubFiles, actualSubFiles));
+        result.addAll(compare(expected, expectedSubFiles, actual, actualSubFiles));
       }
 
       index++;
@@ -84,7 +86,7 @@ public class FolderComparator {
     boolean expectedIsDirectory = expected.isDirectory();
     boolean actualIsDirectory = actual.isDirectory();
 
-    if (expectedIsDirectory && actualIsDirectory) {
+    if (expectedIsDirectory == actualIsDirectory) {
       return Optional.empty();
     }
 
@@ -100,5 +102,21 @@ public class FolderComparator {
 
     return Optional.of(
         new FolderEntryDifference.DifferentChild(expected.toPath(), actual.toPath()));
+  }
+
+  private Optional<FolderEntryDifference> getPossibleFileDifferences(Path expected, Path actual) {
+    for (FileComparator comparator : comparators) {
+      if (comparator.canApply(expected) && comparator.canApply(actual)) {
+
+        List<FileEntryDifference> differences = comparator.compare(expected, actual);
+
+        if (!differences.isEmpty()) {
+          return Optional.of(
+              new FolderEntryDifference.FileCompareDiff(expected, actual, differences));
+        }
+      }
+    }
+
+    return Optional.empty();
   }
 }

@@ -13,7 +13,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 public class FolderComparatorTest {
   private FolderComparator comparator;
-  @TempDir private Path tempDir;
+  @TempDir Path tempDir;
 
   @BeforeEach
   void setup() {
@@ -227,5 +227,92 @@ public class FolderComparatorTest {
             false,
             true),
         differences.getFirst());
+  }
+
+  @Test
+  void shouldReturnEmptyList_whenNotApplicableComparatorIsUsed() throws IOException {
+    Path expected = tempDir.resolve("expected-folder");
+    Path actual = tempDir.resolve("actual-folder");
+    Files.createDirectories(expected);
+    Files.createDirectories(actual);
+    Files.createFile(expected.resolve("sub-file"));
+    Files.createFile(actual.resolve("sub-file"));
+
+    comparator = new FolderComparator(List.of(new NotApplicableComparator()));
+    List<FolderEntryDifference> differences = comparator.compare(expected, actual);
+
+    Assertions.assertEquals(0, differences.size());
+  }
+
+  @Test
+  void shouldReturnEmptyList_whenAlwaysNoDiffComparatorIsUsed() throws IOException {
+    Path expected = tempDir.resolve("expected-folder");
+    Path actual = tempDir.resolve("actual-folder");
+    Files.createDirectories(expected);
+    Files.createDirectories(actual);
+    Files.createFile(expected.resolve("sub-file"));
+    Files.createFile(actual.resolve("sub-file"));
+
+    comparator = new FolderComparator(List.of(new AlwaysNoDiffComparator()));
+    List<FolderEntryDifference> differences = comparator.compare(expected, actual);
+
+    Assertions.assertEquals(0, differences.size());
+  }
+
+  @Test
+  void shouldReturnDifferences_whenAlwaysDiffComparatorIsUsed() throws IOException {
+    Path expected = tempDir.resolve("expected-folder");
+    Path actual = tempDir.resolve("actual-folder");
+    Files.createDirectories(expected);
+    Files.createDirectories(actual);
+    Files.createFile(expected.resolve("sub-file"));
+    Files.createFile(actual.resolve("sub-file"));
+
+    comparator = new FolderComparator(List.of(new AlwaysDiffComparator()));
+    List<FolderEntryDifference> differences = comparator.compare(expected, actual);
+
+    Assertions.assertEquals(1, differences.size());
+    Assertions.assertEquals(
+        new FolderEntryDifference.FileCompareDiff(
+            expected.resolve("sub-file"),
+            actual.resolve("sub-file"),
+            List.of(new FileEntryDifference(0, "expected", "actual"))),
+        differences.getFirst());
+  }
+}
+
+class NotApplicableComparator implements FileComparator {
+  @Override
+  public boolean canApply(Path file) {
+    return false;
+  }
+
+  @Override
+  public List<FileEntryDifference> compare(Path expected, Path actual) {
+    return List.of(new FileEntryDifference(0, "", ""));
+  }
+}
+
+class AlwaysDiffComparator implements FileComparator {
+  @Override
+  public boolean canApply(Path file) {
+    return true;
+  }
+
+  @Override
+  public List<FileEntryDifference> compare(Path expected, Path actual) {
+    return List.of(new FileEntryDifference(0, "expected", "actual"));
+  }
+}
+
+class AlwaysNoDiffComparator implements FileComparator {
+  @Override
+  public boolean canApply(Path file) {
+    return true;
+  }
+
+  @Override
+  public List<FileEntryDifference> compare(Path expected, Path actual) {
+    return List.of();
   }
 }
