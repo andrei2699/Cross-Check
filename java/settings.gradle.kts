@@ -1,1 +1,1 @@
-rootProject.name = "CrossCheckJ"
+rootProject.name = "CrossCheck"

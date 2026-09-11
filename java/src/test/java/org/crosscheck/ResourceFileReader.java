@@ -1,4 +1,4 @@
-package org.crosscheckj;
+package org.crosscheck;
 
 import java.io.File;
 import java.nio.file.Path;

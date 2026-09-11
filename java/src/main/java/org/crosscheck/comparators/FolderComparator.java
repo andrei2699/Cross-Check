@@ -1,4 +1,4 @@
-package org.crosscheckj.comparators;
+package org.crosscheck.comparators;
 
 import java.io.File;
 import java.io.FileNotFoundException;

@@ -1,4 +1,4 @@
-package org.crosscheckj.comparators;
+package org.crosscheck.comparators;
 
 import java.nio.file.Path;
 import java.util.List;

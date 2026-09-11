@@ -1,8 +1,8 @@
-package org.crosscheckj.comparators;
+package org.crosscheck.comparators;
 
 import java.nio.file.Path;
 import java.util.List;
-import org.crosscheckj.ResourceFileReader;
+import org.crosscheck.ResourceFileReader;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
